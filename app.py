@@ -6,10 +6,15 @@ import io
 import json
 import random
 from datetime import datetime
+import requests
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Gemini API Configuration
+GEMINI_API_KEY = "AIzaSyD_qGFz5MHnupcsO024ckw4TDrs7W3EaLk"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent"
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -92,6 +97,18 @@ def analyze_image_features(image_data):
         if img.mode != 'RGB':
             img = img.convert('RGB')
         
+        # Try Gemini API first for more accurate analysis
+        try:
+            gemini_result = analyze_with_gemini(img, image_data)
+            if gemini_result:
+                print(f"DEBUG - Gemini API result: {gemini_result}")
+                return gemini_result
+        except Exception as e:
+            print(f"DEBUG - Gemini API failed: {e}")
+        
+        # Fallback to traditional analysis
+        print("DEBUG - Using traditional analysis")
+        
         # Get image dimensions
         width, height = img.size
         
@@ -126,6 +143,95 @@ def analyze_image_features(image_data):
     except Exception as e:
         print(f"Error in image analysis: {e}")
         return random.choice(list(COLOR_TYPES.keys()))
+
+def analyze_with_gemini(img, image_data):
+    """Analyze image using Gemini API for more accurate color analysis"""
+    try:
+        # Prepare the image for Gemini API
+        img_buffer = io.BytesIO()
+        img.save(img_buffer, format='JPEG', quality=85)
+        img_buffer.seek(0)
+        
+        # Encode image for API
+        import base64
+        img_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+        
+        # Prepare the prompt for color analysis
+        prompt = """
+        Analyze this person's color characteristics for personal color analysis. 
+        Look at their skin tone, hair color, and eye color.
+        
+        Based on traditional color analysis principles:
+        - Dark hair + dark eyes = Winter palette (Cool Winter or Neutral Winter)
+        - Light hair + light eyes + warm skin = Spring palette (Bright Spring or Warm Spring)
+        - Light hair + light eyes + cool skin = Summer palette (Cool Summer or Neutral Summer)
+        - Medium features + warm skin = Autumn palette (Warm Autumn or Deep Autumn)
+        
+        Respond with ONLY one of these exact color types:
+        - cool_winter
+        - neutral_winter
+        - bright_spring
+        - warm_spring
+        - cool_summer
+        - neutral_summer
+        - warm_autumn
+        - deep_autumn
+        
+        Be very specific about the features you see and choose the most accurate color type.
+        """
+        
+        # Prepare the API request
+        headers = {
+            'Content-Type': 'application/json',
+        }
+        
+        data = {
+            "contents": [{
+                "parts": [
+                    {"text": prompt},
+                    {
+                        "inline_data": {
+                            "mime_type": "image/jpeg",
+                            "data": img_base64
+                        }
+                    }
+                ]
+            }],
+            "generationConfig": {
+                "temperature": 0.1,
+                "topK": 1,
+                "topP": 0.1,
+                "maxOutputTokens": 50,
+            }
+        }
+        
+        # Make the API request
+        response = requests.post(
+            f"{GEMINI_API_URL}?key={GEMINI_API_KEY}",
+            headers=headers,
+            json=data,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            if 'candidates' in result and len(result['candidates']) > 0:
+                text = result['candidates'][0]['content']['parts'][0]['text'].strip().lower()
+                
+                # Extract the color type from the response
+                for color_type in COLOR_TYPES.keys():
+                    if color_type in text:
+                        return color_type
+                
+                print(f"DEBUG - Gemini response: {text}")
+                return None
+        else:
+            print(f"DEBUG - Gemini API error: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        print(f"DEBUG - Gemini API exception: {e}")
+        return None
 
 def analyze_skin_tone(face_region):
     """Analyze skin tone characteristics"""
@@ -231,6 +337,11 @@ def analyze_eye_color(eye_region):
 def determine_color_type_accurate(skin, hair, eye):
     """Determine color type based on traditional color analysis principles"""
     
+    # Add debugging information
+    print(f"DEBUG - Skin: brightness={skin['brightness']:.1f}, warmth={skin['warmth']:.1f}, contrast={skin['contrast']}")
+    print(f"DEBUG - Hair: brightness={hair['brightness']:.1f}, warmth={hair['warmth']:.1f}, color={hair['color']}")
+    print(f"DEBUG - Eyes: brightness={eye['brightness']:.1f}, warmth={eye['warmth']:.1f}, color={eye['color']}")
+    
     # Traditional color analysis logic:
     # Dark hair + dark eyes = Winter palette
     # Light hair + light eyes = Spring/Summer palette
@@ -240,54 +351,71 @@ def determine_color_type_accurate(skin, hair, eye):
     if (hair['color'] == 'dark' and eye['color'] == 'dark' and 
         skin['contrast'] == 'high' and skin['brightness'] < 130):
         if skin['warmth'] > 10:
+            print("DEBUG - Detected: Neutral Winter")
             return 'neutral_winter'
         else:
+            print("DEBUG - Detected: Cool Winter")
             return 'cool_winter'
     
     # Check for Spring characteristics (light features, warm undertones)
     elif (hair['color'] == 'light' and eye['color'] == 'light' and 
           skin['warmth'] > 15 and skin['brightness'] > 140):
+        print("DEBUG - Detected: Bright Spring")
         return 'bright_spring'
     elif (hair['color'] in ['light', 'medium'] and 
           skin['warmth'] > 10 and skin['brightness'] > 120):
+        print("DEBUG - Detected: Warm Spring")
         return 'warm_spring'
     
     # Check for Summer characteristics (light features, cool undertones)
     elif (hair['color'] == 'light' and eye['color'] == 'light' and 
           skin['warmth'] < -10 and skin['brightness'] > 130):
+        print("DEBUG - Detected: Cool Summer")
         return 'cool_summer'
     elif (hair['color'] in ['light', 'medium'] and 
           skin['warmth'] < 5 and skin['brightness'] > 110):
+        print("DEBUG - Detected: Neutral Summer")
         return 'neutral_summer'
     
     # Check for Autumn characteristics (medium features, warm undertones)
     elif (hair['color'] == 'medium' and eye['color'] == 'medium' and 
           skin['warmth'] > 10 and skin['brightness'] < 120):
+        print("DEBUG - Detected: Warm Autumn")
         return 'warm_autumn'
     elif (hair['color'] == 'dark' and skin['warmth'] > 15 and 
           skin['brightness'] < 100):
+        print("DEBUG - Detected: Deep Autumn")
         return 'deep_autumn'
     
     # Fallback logic based on skin characteristics
+    print("DEBUG - Using fallback logic")
     if skin['brightness'] > 140:
         if skin['warmth'] > 10:
+            print("DEBUG - Fallback: Bright Spring")
             return 'bright_spring'
         else:
+            print("DEBUG - Fallback: Cool Summer")
             return 'cool_summer'
     elif skin['brightness'] > 110:
         if skin['warmth'] > 10:
+            print("DEBUG - Fallback: Warm Spring")
             return 'warm_spring'
         else:
+            print("DEBUG - Fallback: Neutral Summer")
             return 'neutral_summer'
     elif skin['brightness'] > 80:
         if skin['warmth'] > 10:
+            print("DEBUG - Fallback: Warm Autumn")
             return 'warm_autumn'
         else:
+            print("DEBUG - Fallback: Neutral Winter")
             return 'neutral_winter'
     else:
         if skin['warmth'] > 10:
+            print("DEBUG - Fallback: Deep Autumn")
             return 'deep_autumn'
         else:
+            print("DEBUG - Fallback: Cool Winter")
             return 'cool_winter'
 
 def generate_face_analysis(color_type):
