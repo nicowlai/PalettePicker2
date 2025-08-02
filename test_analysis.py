@@ -6,7 +6,6 @@ Test script for the improved color analysis algorithm
 import base64
 import io
 from PIL import Image
-import numpy as np
 
 # Import the analysis functions from app.py
 import sys
