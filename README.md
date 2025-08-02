@@ -10,9 +10,12 @@ A beautiful, trendy web application that analyzes your personal color palette ba
 ## 🌟 Features
 
 - **Image Upload**: Drag & drop or click to upload your selfie
-- **Color Analysis**: Get your personal color type (16-color system)
-- **Face Analysis**: Detailed analysis of your complexion, eyes, hair, and features
+- **Advanced Color Analysis**: Get your personal color type with detailed analysis
+- **Detailed Hair & Eye Detection**: Specific color identification (Golden Blonde, Ash Blonde, Green, Dark Gray, etc.)
+- **Face Analysis**: Comprehensive analysis of your complexion, eyes, hair, and features
 - **Personalized Recommendations**: Clothing and makeup color suggestions
+- **Detailed Measurements**: Brightness, warmth, and undertone analysis for all features
+- **Score-Based Algorithm**: Advanced color type determination using multiple factors
 - **Beautiful UI**: Mean Girls theme with pink colors and scrapbook text
 - **Responsive Design**: Works perfectly on all devices
 - **Fun Animations**: Engaging interactions and smooth transitions
@@ -83,17 +86,27 @@ Visit the demo page: [Demo](demo.html)
 - **Backend**: Flask (Python)
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
 - **Image Processing**: PIL (Python Imaging Library)
+- **AI Integration**: Google Gemini API for advanced analysis
+- **Color Analysis**: Advanced algorithm with score-based determination
 - **Styling**: Custom CSS with Mean Girls theme
 - **Fonts**: Google Fonts (Pacifico, Indie Flower, Quicksand)
 
-## 🎯 Future Enhancements
+## 🎯 Current Features & Enhancements
 
-- **AI Integration**: Use machine learning for more accurate analysis
-- **Gemini API**: Integrate with Google's Gemini API for advanced image analysis
-- **Social Features**: Share results on social media
+- **✅ AI Integration**: Gemini API integration for advanced image analysis
+- **✅ Detailed Color Detection**: Specific hair and eye color identification
+- **✅ Score-Based Algorithm**: Advanced color type determination using multiple factors
+- **✅ Enhanced Accuracy**: Eliminated bias and improved analysis precision
+- **✅ Detailed Measurements**: Brightness, warmth, and undertone analysis
+- **✅ Social Features**: Share results with friends
+- **✅ Responsive UI**: Beautiful detailed analysis cards
+
+## 🚀 Future Enhancements
+
 - **Color Palette Generator**: Create custom palettes based on analysis
 - **Makeup Recommendations**: Specific product suggestions
 - **Clothing Suggestions**: Outfit recommendations based on color type
+- **Advanced AI**: Machine learning for even more accurate analysis
 
 ## 🎨 Theme Details
 
