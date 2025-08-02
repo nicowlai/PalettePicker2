@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo - Personal Color Analysis</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ffe6f2 0%, #ffb3d9 50%, #ff99cc 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(255, 182, 193, 0.4);
+        }
+        h1 {
+            color: #ff69b4;
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        .demo-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 182, 193, 0.1);
+            border-radius: 15px;
+            border: 2px solid rgba(255, 182, 193, 0.3);
+        }
+        .demo-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .demo-section p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 182, 193, 0.3);
+        }
+        .feature-list li:before {
+            content: "✨ ";
+            color: #ff69b4;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff69b4, #ff1493);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 10px;
+            transition: transform 0.3s ease;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        .color-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .color-type {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 182, 193, 0.3);
+        }
+        .color-type h3 {
+            color: #ff69b4;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>✨ Personal Color Analysis Demo ✨</h1>
+        
+        <div class="demo-section">
+            <h2>🎨 What is Personal Color Analysis?</h2>
+            <p>Personal Color Analysis is a system that helps you discover your perfect color palette based on your natural features like skin tone, eye color, and hair color. It categorizes people into different "seasons" or color types, each with their own perfect colors for clothing and makeup.</p>
+        </div>
+
+        <div class="demo-section">
+            <h2>🌟 Features of Our App</h2>
+            <ul class="feature-list">
+                <li>Upload your selfie with drag & drop</li>
+                <li>Automatic color analysis using AI</li>
+                <li>Personalized face analysis</li>
+                <li>Clothing color recommendations</li>
+                <li>Makeup color suggestions</li>
+                <li>Beautiful Mean Girls themed UI</li>
+                <li>Share results with friends</li>
+                <li>Works on all devices</li>
+            </ul>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎨 Color Types We Analyze</h2>
+            <div class="color-types">
+                <div class="color-type">
+                    <h3>Cool Winter</h3>
+                    <p>Bright, cool complexion with blue undertones</p>
+                </div>
+                <div class="color-type">
+                    <h3>Neutral Winter</h3>
+                    <p>Balanced cool-warm complexion</p>
+                </div>
+                <div class="color-type">
+                    <h3>Bright Spring</h3>
+                    <p>Warm, bright complexion with golden undertones</p>
+                </div>
+                <div class="color-type">
+                    <h3>Warm Spring</h3>
+                    <p>Warm, golden complexion with natural glow</p>
+                </div>
+                <div class="color-type">
+                    <h3>Cool Summer</h3>
+                    <p>Soft, cool complexion with blue undertones</p>
+                </div>
+                <div class="color-type">
+                    <h3>Neutral Summer</h3>
+                    <p>Balanced soft complexion</p>
+                </div>
+                <div class="color-type">
+                    <h3>Warm Autumn</h3>
+                    <p>Warm, rich complexion with golden undertones</p>
+                </div>
+                <div class="color-type">
+                    <h3>Deep Autumn</h3>
+                    <p>Deep, rich complexion with warm undertones</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🚀 Ready to Discover Your Colors?</h2>
+            <p>Click the button below to start your personal color analysis journey!</p>
+            <div style="text-align: center;">
+                <a href="http://localhost:5000" class="cta-button">Start My Analysis ✨</a>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>💡 How to Use</h2>
+            <ol>
+                <li>Upload a clear selfie or headshot</li>
+                <li>Click "Analyze My Colors!"</li>
+                <li>View your personalized color type</li>
+                <li>Get clothing and makeup recommendations</li>
+                <li>Share your results with friends!</li>
+            </ol>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎯 Future Enhancements</h2>
+            <ul class="feature-list">
+                <li>AI-powered face analysis with Gemini API</li>
+                <li>Specific product recommendations</li>
+                <li>Virtual try-on features</li>
+                <li>Social media integration</li>
+                <li>Color palette generator</li>
+                <li>Seasonal color updates</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 
