@@ -83,7 +83,7 @@ COLOR_TYPES = {
 }
 
 def analyze_image_features(image_data):
-    """Analyze image features and determine color type with improved accuracy"""
+    """Analyze image features and determine color type with accurate color analysis"""
     try:
         # Decode and open the image
         img = Image.open(io.BytesIO(base64.b64decode(image_data.split(',')[1])))
@@ -95,102 +95,200 @@ def analyze_image_features(image_data):
         # Get image dimensions
         width, height = img.size
         
-        # Analyze different regions of the image for more accurate results
-        # Focus on center area (likely face) and edges (likely hair/background)
+        # Define regions for analysis
+        # Face region (center area)
+        face_x1, face_y1 = int(width * 0.25), int(height * 0.25)
+        face_x2, face_y2 = int(width * 0.75), int(height * 0.75)
+        face_region = img.crop((face_x1, face_y1, face_x2, face_y2))
         
-        # Center region (face area)
-        center_x1, center_y1 = int(width * 0.3), int(height * 0.2)
-        center_x2, center_y2 = int(width * 0.7), int(height * 0.8)
-        face_region = img.crop((center_x1, center_y1, center_x2, center_y2))
+        # Hair region (top area)
+        hair_x1, hair_y1 = int(width * 0.1), int(height * 0.05)
+        hair_x2, hair_y2 = int(width * 0.9), int(height * 0.35)
+        hair_region = img.crop((hair_x1, hair_y1, hair_x2, hair_y2))
         
-        # Top region (hair area)
-        hair_region = img.crop((0, 0, width, int(height * 0.3)))
+        # Eye region (upper face area)
+        eye_x1, eye_y1 = int(width * 0.3), int(height * 0.3)
+        eye_x2, eye_y2 = int(width * 0.7), int(height * 0.5)
+        eye_region = img.crop((eye_x1, eye_y1, eye_x2, eye_y2))
         
-        # Analyze face region for skin tone
-        face_colors = face_region.getcolors(1000)
-        if face_colors:
-            face_colors = sorted(face_colors, key=lambda x: x[0], reverse=True)[:10]
-            skin_tones = [color for count, color in face_colors if count > 50]
-            
-            if skin_tones:
-                # Calculate average skin tone characteristics
-                avg_skin_r = sum(color[0] for color in skin_tones) / len(skin_tones)
-                avg_skin_g = sum(color[1] for color in skin_tones) / len(skin_tones)
-                avg_skin_b = sum(color[2] for color in skin_tones) / len(skin_tones)
-                avg_skin_brightness = (avg_skin_r + avg_skin_g + avg_skin_b) / 3
-                
-                # Determine skin undertone (warm vs cool)
-                skin_warmth = avg_skin_r - avg_skin_b
-                
-                # Analyze hair region for hair color
-                hair_colors = hair_region.getcolors(500)
-                if hair_colors:
-                    hair_colors = sorted(hair_colors, key=lambda x: x[0], reverse=True)[:5]
-                    hair_tones = [color for count, color in hair_colors if count > 30]
-                    
-                    if hair_tones:
-                        avg_hair_r = sum(color[0] for color in hair_tones) / len(hair_tones)
-                        avg_hair_g = sum(color[1] for color in hair_tones) / len(hair_tones)
-                        avg_hair_b = sum(color[2] for color in hair_tones) / len(hair_tones)
-                        avg_hair_brightness = (avg_hair_r + avg_hair_g + avg_hair_b) / 3
-                        hair_warmth = avg_hair_r - avg_hair_b
-                        
-                        # Enhanced color type determination based on skin and hair analysis
-                        return determine_color_type(avg_skin_brightness, skin_warmth, avg_hair_brightness, hair_warmth)
+        # Analyze skin tone (face region)
+        skin_analysis = analyze_skin_tone(face_region)
         
-        # Fallback: analyze entire image if face/hair analysis fails
-        img_small = img.resize((100, 100))
-        colors = img_small.getcolors(5000)
+        # Analyze hair color (hair region)
+        hair_analysis = analyze_hair_color(hair_region)
         
-        if colors:
-            colors = sorted(colors, key=lambda x: x[0], reverse=True)[:20]
-            dominant_colors = [color for count, color in colors if count > 100]
-            
-            if dominant_colors:
-                avg_brightness = sum(sum(color) / 3 for color in dominant_colors) / len(dominant_colors)
-                avg_warmth = sum(color[0] - color[2] for color in dominant_colors) / len(dominant_colors)
-                
-                return determine_color_type(avg_brightness, avg_warmth, avg_brightness, avg_warmth)
+        # Analyze eye color (eye region)
+        eye_analysis = analyze_eye_color(eye_region)
         
-        # Final fallback
-        return random.choice(list(COLOR_TYPES.keys()))
+        # Determine color type based on traditional color analysis principles
+        return determine_color_type_accurate(skin_analysis, hair_analysis, eye_analysis)
         
     except Exception as e:
         print(f"Error in image analysis: {e}")
         return random.choice(list(COLOR_TYPES.keys()))
 
-def determine_color_type(skin_brightness, skin_warmth, hair_brightness, hair_warmth):
-    """Determine color type based on analyzed features"""
+def analyze_skin_tone(face_region):
+    """Analyze skin tone characteristics"""
+    colors = face_region.getcolors(2000)
+    if not colors:
+        return {'brightness': 120, 'warmth': 0, 'contrast': 'medium'}
     
-    # Define thresholds for different characteristics
-    BRIGHT_THRESHOLD = 140
-    MEDIUM_THRESHOLD = 100
-    WARM_THRESHOLD = 10
-    COOL_THRESHOLD = -10
+    # Get dominant skin colors
+    dominant_colors = [color for count, color in colors if count > 100]
+    if not dominant_colors:
+        dominant_colors = [color for count, color in colors[:10]]
     
-    # Determine season based on skin and hair characteristics
-    if skin_brightness > BRIGHT_THRESHOLD:
-        # Bright seasons
-        if skin_warmth > WARM_THRESHOLD:
-            return 'bright_spring'
-        elif skin_warmth < COOL_THRESHOLD:
-            return 'cool_winter'
-        else:
+    # Calculate skin characteristics
+    avg_r = sum(color[0] for color in dominant_colors) / len(dominant_colors)
+    avg_g = sum(color[1] for color in dominant_colors) / len(dominant_colors)
+    avg_b = sum(color[2] for color in dominant_colors) / len(dominant_colors)
+    
+    brightness = (avg_r + avg_g + avg_b) / 3
+    warmth = avg_r - avg_b  # Red vs Blue balance
+    saturation = max(avg_r, avg_g, avg_b) - min(avg_r, avg_g, avg_b)
+    
+    # Determine contrast level
+    if brightness > 150:
+        contrast = 'high'
+    elif brightness > 100:
+        contrast = 'medium'
+    else:
+        contrast = 'low'
+    
+    return {
+        'brightness': brightness,
+        'warmth': warmth,
+        'saturation': saturation,
+        'contrast': contrast
+    }
+
+def analyze_hair_color(hair_region):
+    """Analyze hair color characteristics"""
+    colors = hair_region.getcolors(1000)
+    if not colors:
+        return {'brightness': 80, 'warmth': 0, 'color': 'unknown'}
+    
+    # Get dominant hair colors
+    dominant_colors = [color for count, color in colors if count > 50]
+    if not dominant_colors:
+        dominant_colors = [color for count, color in colors[:5]]
+    
+    # Calculate hair characteristics
+    avg_r = sum(color[0] for color in dominant_colors) / len(dominant_colors)
+    avg_g = sum(color[1] for color in dominant_colors) / len(dominant_colors)
+    avg_b = sum(color[2] for color in dominant_colors) / len(dominant_colors)
+    
+    brightness = (avg_r + avg_g + avg_b) / 3
+    warmth = avg_r - avg_b
+    
+    # Determine hair color category
+    if brightness < 60:
+        color = 'dark'
+    elif brightness < 100:
+        color = 'medium'
+    else:
+        color = 'light'
+    
+    return {
+        'brightness': brightness,
+        'warmth': warmth,
+        'color': color
+    }
+
+def analyze_eye_color(eye_region):
+    """Analyze eye color characteristics"""
+    colors = eye_region.getcolors(500)
+    if not colors:
+        return {'brightness': 80, 'warmth': 0, 'color': 'unknown'}
+    
+    # Get dominant eye colors
+    dominant_colors = [color for count, color in colors if count > 20]
+    if not dominant_colors:
+        dominant_colors = [color for count, color in colors[:3]]
+    
+    # Calculate eye characteristics
+    avg_r = sum(color[0] for color in dominant_colors) / len(dominant_colors)
+    avg_g = sum(color[1] for color in dominant_colors) / len(dominant_colors)
+    avg_b = sum(color[2] for color in dominant_colors) / len(dominant_colors)
+    
+    brightness = (avg_r + avg_g + avg_b) / 3
+    warmth = avg_r - avg_b
+    
+    # Determine eye color category
+    if brightness < 70:
+        color = 'dark'
+    elif brightness < 120:
+        color = 'medium'
+    else:
+        color = 'light'
+    
+    return {
+        'brightness': brightness,
+        'warmth': warmth,
+        'color': color
+    }
+
+def determine_color_type_accurate(skin, hair, eye):
+    """Determine color type based on traditional color analysis principles"""
+    
+    # Traditional color analysis logic:
+    # Dark hair + dark eyes = Winter palette
+    # Light hair + light eyes = Spring/Summer palette
+    # Medium features = Autumn palette
+    
+    # Check for Winter characteristics (dark features, high contrast)
+    if (hair['color'] == 'dark' and eye['color'] == 'dark' and 
+        skin['contrast'] == 'high' and skin['brightness'] < 130):
+        if skin['warmth'] > 10:
             return 'neutral_winter'
-    elif skin_brightness > MEDIUM_THRESHOLD:
-        # Medium seasons
-        if skin_warmth > WARM_THRESHOLD:
-            return 'warm_spring'
-        elif skin_warmth < COOL_THRESHOLD:
+        else:
+            return 'cool_winter'
+    
+    # Check for Spring characteristics (light features, warm undertones)
+    elif (hair['color'] == 'light' and eye['color'] == 'light' and 
+          skin['warmth'] > 15 and skin['brightness'] > 140):
+        return 'bright_spring'
+    elif (hair['color'] in ['light', 'medium'] and 
+          skin['warmth'] > 10 and skin['brightness'] > 120):
+        return 'warm_spring'
+    
+    # Check for Summer characteristics (light features, cool undertones)
+    elif (hair['color'] == 'light' and eye['color'] == 'light' and 
+          skin['warmth'] < -10 and skin['brightness'] > 130):
+        return 'cool_summer'
+    elif (hair['color'] in ['light', 'medium'] and 
+          skin['warmth'] < 5 and skin['brightness'] > 110):
+        return 'neutral_summer'
+    
+    # Check for Autumn characteristics (medium features, warm undertones)
+    elif (hair['color'] == 'medium' and eye['color'] == 'medium' and 
+          skin['warmth'] > 10 and skin['brightness'] < 120):
+        return 'warm_autumn'
+    elif (hair['color'] == 'dark' and skin['warmth'] > 15 and 
+          skin['brightness'] < 100):
+        return 'deep_autumn'
+    
+    # Fallback logic based on skin characteristics
+    if skin['brightness'] > 140:
+        if skin['warmth'] > 10:
+            return 'bright_spring'
+        else:
             return 'cool_summer'
+    elif skin['brightness'] > 110:
+        if skin['warmth'] > 10:
+            return 'warm_spring'
         else:
             return 'neutral_summer'
-    else:
-        # Deep seasons
-        if skin_warmth > WARM_THRESHOLD:
+    elif skin['brightness'] > 80:
+        if skin['warmth'] > 10:
             return 'warm_autumn'
         else:
+            return 'neutral_winter'
+    else:
+        if skin['warmth'] > 10:
             return 'deep_autumn'
+        else:
+            return 'cool_winter'
 
 def generate_face_analysis(color_type):
     """Generate personalized face analysis based on color type"""
