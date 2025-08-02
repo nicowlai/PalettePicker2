@@ -26,6 +26,21 @@ const clothingColors = document.getElementById('clothingColors');
 const makeupColors = document.getElementById('makeupColors');
 const avoidColors = document.getElementById('avoidColors');
 
+// Detailed analysis elements
+const skinColor = document.getElementById('skinColor');
+const skinBrightness = document.getElementById('skinBrightness');
+const skinWarmth = document.getElementById('skinWarmth');
+const skinUndertone = document.getElementById('skinUndertone');
+const skinContrast = document.getElementById('skinContrast');
+const hairColor = document.getElementById('hairColor');
+const hairBrightness = document.getElementById('hairBrightness');
+const hairWarmth = document.getElementById('hairWarmth');
+const hairCategory = document.getElementById('hairCategory');
+const eyeColor = document.getElementById('eyeColor');
+const eyeBrightness = document.getElementById('eyeBrightness');
+const eyeWarmth = document.getElementById('eyeWarmth');
+const eyeCategory = document.getElementById('eyeCategory');
+
 let uploadedImageData = null;
 
 // Event Listeners
@@ -148,6 +163,28 @@ function displayResults(data) {
     eyes.textContent = data.face_analysis.eyes;
     hair.textContent = data.face_analysis.hair;
     features.textContent = data.face_analysis.features;
+    
+    // Update detailed analysis if available
+    if (data.detailed_analysis) {
+        // Skin analysis
+        skinColor.textContent = `${data.detailed_analysis.skin.undertone} undertone`;
+        skinBrightness.textContent = data.detailed_analysis.skin.brightness;
+        skinWarmth.textContent = data.detailed_analysis.skin.warmth;
+        skinUndertone.textContent = data.detailed_analysis.skin.undertone;
+        skinContrast.textContent = data.detailed_analysis.skin.contrast;
+        
+        // Hair analysis
+        hairColor.textContent = data.detailed_analysis.hair.color;
+        hairBrightness.textContent = data.detailed_analysis.hair.brightness;
+        hairWarmth.textContent = data.detailed_analysis.hair.warmth;
+        hairCategory.textContent = data.detailed_analysis.hair.category;
+        
+        // Eye analysis
+        eyeColor.textContent = data.detailed_analysis.eyes.color;
+        eyeBrightness.textContent = data.detailed_analysis.eyes.brightness;
+        eyeWarmth.textContent = data.detailed_analysis.eyes.warmth;
+        eyeCategory.textContent = data.detailed_analysis.eyes.category;
+    }
     
     // Update recommendations
     updateColorTags(clothingColors, data.color_type.clothing);

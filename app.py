@@ -13,8 +13,8 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Gemini API Configuration
-GEMINI_API_KEY = "AIzaSyD_qGFz5MHnupcsO024ckw4TDrs7W3EaLk"
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent"
+GEMINI_API_KEY = "AIzaSyD_qGFz5MHnupcsO024ckw4TDrs7W3EaLg"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent"
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -269,15 +269,15 @@ def analyze_skin_tone(face_region):
     }
 
 def analyze_hair_color(hair_region):
-    """Analyze hair color characteristics"""
-    colors = hair_region.getcolors(1000)
+    """Analyze hair color characteristics with detailed color detection"""
+    colors = hair_region.getcolors(2000)
     if not colors:
-        return {'brightness': 80, 'warmth': 0, 'color': 'unknown'}
+        return {'brightness': 80, 'warmth': 0, 'color': 'medium', 'specific_color': 'unknown'}
     
-    # Get dominant hair colors
-    dominant_colors = [color for count, color in colors if count > 50]
+    # Get dominant hair colors with better filtering
+    dominant_colors = [color for count, color in colors if count > 20]
     if not dominant_colors:
-        dominant_colors = [color for count, color in colors[:5]]
+        dominant_colors = [color for count, color in colors[:10]]
     
     # Calculate hair characteristics
     avg_r = sum(color[0] for color in dominant_colors) / len(dominant_colors)
@@ -286,31 +286,68 @@ def analyze_hair_color(hair_region):
     
     brightness = (avg_r + avg_g + avg_b) / 3
     warmth = avg_r - avg_b
+    saturation = max(avg_r, avg_g, avg_b) - min(avg_r, avg_g, avg_b)
     
-    # Determine hair color category
+    # Detailed hair color detection
     if brightness < 60:
+        if warmth > 10:
+            specific_color = 'dark_brown'
+        elif warmth < -10:
+            specific_color = 'black'
+        else:
+            specific_color = 'dark_neutral'
         color = 'dark'
-    elif brightness < 100:
+    elif brightness < 90:
+        if warmth > 15:
+            specific_color = 'medium_brown'
+        elif warmth > 5:
+            specific_color = 'auburn'
+        elif warmth < -5:
+            specific_color = 'ash_brown'
+        else:
+            specific_color = 'medium_neutral'
+        color = 'medium'
+    elif brightness < 130:
+        if warmth > 20:
+            specific_color = 'light_brown'
+        elif warmth > 10:
+            specific_color = 'strawberry_blonde'
+        elif warmth < -10:
+            specific_color = 'ash_blonde'
+        else:
+            specific_color = 'light_neutral'
         color = 'medium'
     else:
+        if warmth > 15:
+            specific_color = 'golden_blonde'
+        elif warmth > 5:
+            specific_color = 'honey_blonde'
+        elif warmth < -5:
+            specific_color = 'platinum_blonde'
+        else:
+            specific_color = 'neutral_blonde'
         color = 'light'
+    
+    print(f"DEBUG - Hair Analysis: brightness={brightness:.1f}, warmth={warmth:.1f}, saturation={saturation:.1f}, color={color}, specific={specific_color}")
     
     return {
         'brightness': brightness,
         'warmth': warmth,
-        'color': color
+        'saturation': saturation,
+        'color': color,
+        'specific_color': specific_color
     }
 
 def analyze_eye_color(eye_region):
-    """Analyze eye color characteristics"""
-    colors = eye_region.getcolors(500)
+    """Analyze eye color characteristics with detailed color detection"""
+    colors = eye_region.getcolors(1000)
     if not colors:
-        return {'brightness': 80, 'warmth': 0, 'color': 'unknown'}
+        return {'brightness': 80, 'warmth': 0, 'color': 'medium', 'specific_color': 'unknown'}
     
-    # Get dominant eye colors
-    dominant_colors = [color for count, color in colors if count > 20]
+    # Get dominant eye colors with better filtering
+    dominant_colors = [color for count, color in colors if count > 10]
     if not dominant_colors:
-        dominant_colors = [color for count, color in colors[:3]]
+        dominant_colors = [color for count, color in colors[:8]]
     
     # Calculate eye characteristics
     avg_r = sum(color[0] for color in dominant_colors) / len(dominant_colors)
@@ -319,104 +356,297 @@ def analyze_eye_color(eye_region):
     
     brightness = (avg_r + avg_g + avg_b) / 3
     warmth = avg_r - avg_b
+    saturation = max(avg_r, avg_g, avg_b) - min(avg_r, avg_g, avg_b)
     
-    # Determine eye color category
+    # Detailed eye color detection
     if brightness < 70:
+        if warmth > 10:
+            specific_color = 'dark_brown'
+        elif warmth < -10:
+            specific_color = 'black'
+        else:
+            specific_color = 'dark_neutral'
         color = 'dark'
-    elif brightness < 120:
+    elif brightness < 100:
+        if warmth > 15:
+            specific_color = 'medium_brown'
+        elif warmth > 5:
+            specific_color = 'hazel'
+        elif warmth < -5:
+            specific_color = 'dark_gray'
+        else:
+            specific_color = 'medium_neutral'
+        color = 'medium'
+    elif brightness < 140:
+        if warmth > 20:
+            specific_color = 'light_brown'
+        elif warmth > 10:
+            specific_color = 'amber'
+        elif warmth < -10:
+            specific_color = 'light_gray'
+        else:
+            specific_color = 'light_neutral'
         color = 'medium'
     else:
+        if warmth > 15:
+            specific_color = 'green'
+        elif warmth > 5:
+            specific_color = 'hazel_green'
+        elif warmth < -15:
+            specific_color = 'blue'
+        elif warmth < -5:
+            specific_color = 'gray_blue'
+        else:
+            specific_color = 'neutral_light'
         color = 'light'
+    
+    print(f"DEBUG - Eye Analysis: brightness={brightness:.1f}, warmth={warmth:.1f}, saturation={saturation:.1f}, color={color}, specific={specific_color}")
     
     return {
         'brightness': brightness,
         'warmth': warmth,
-        'color': color
+        'saturation': saturation,
+        'color': color,
+        'specific_color': specific_color
     }
 
 def determine_color_type_accurate(skin, hair, eye):
-    """Determine color type based on traditional color analysis principles"""
+    """Determine color type based on detailed analysis of skin, hair, and eye characteristics"""
     
     # Add debugging information
     print(f"DEBUG - Skin: brightness={skin['brightness']:.1f}, warmth={skin['warmth']:.1f}, contrast={skin['contrast']}")
-    print(f"DEBUG - Hair: brightness={hair['brightness']:.1f}, warmth={hair['warmth']:.1f}, color={hair['color']}")
-    print(f"DEBUG - Eyes: brightness={eye['brightness']:.1f}, warmth={eye['warmth']:.1f}, color={eye['color']}")
+    print(f"DEBUG - Hair: brightness={hair['brightness']:.1f}, warmth={hair['warmth']:.1f}, color={hair['color']}, specific={hair['specific_color']}")
+    print(f"DEBUG - Eyes: brightness={eye['brightness']:.1f}, warmth={eye['warmth']:.1f}, color={eye['color']}, specific={eye['specific_color']}")
     
-    # Traditional color analysis logic:
-    # Dark hair + dark eyes = Winter palette
-    # Light hair + light eyes = Spring/Summer palette
-    # Medium features = Autumn palette
+    # Score-based system for more accurate color type determination
+    scores = {
+        'cool_winter': 0,
+        'neutral_winter': 0,
+        'bright_spring': 0,
+        'warm_spring': 0,
+        'cool_summer': 0,
+        'neutral_summer': 0,
+        'warm_autumn': 0,
+        'deep_autumn': 0
+    }
     
-    # Check for Winter characteristics (dark features, high contrast)
-    if (hair['color'] == 'dark' and eye['color'] == 'dark' and 
-        skin['contrast'] == 'high' and skin['brightness'] < 130):
-        if skin['warmth'] > 10:
-            print("DEBUG - Detected: Neutral Winter")
-            return 'neutral_winter'
+    # Skin tone scoring
+    if skin['brightness'] < 110:
+        if skin['warmth'] < 0:
+            scores['cool_winter'] += 3
+            scores['neutral_winter'] += 2
         else:
-            print("DEBUG - Detected: Cool Winter")
-            return 'cool_winter'
+            scores['neutral_winter'] += 3
+            scores['deep_autumn'] += 2
+    elif skin['brightness'] < 130:
+        if skin['warmth'] > 10:
+            scores['warm_spring'] += 3
+            scores['warm_autumn'] += 2
+        elif skin['warmth'] < -5:
+            scores['cool_summer'] += 3
+            scores['neutral_summer'] += 2
+        else:
+            scores['neutral_winter'] += 2
+            scores['neutral_summer'] += 2
+    else:
+        if skin['warmth'] > 15:
+            scores['bright_spring'] += 3
+            scores['warm_spring'] += 2
+        elif skin['warmth'] < -10:
+            scores['cool_summer'] += 3
+            scores['neutral_summer'] += 2
+        else:
+            scores['bright_spring'] += 2
+            scores['cool_summer'] += 2
     
-    # Check for Spring characteristics (light features, warm undertones)
-    elif (hair['color'] == 'light' and eye['color'] == 'light' and 
-          skin['warmth'] > 15 and skin['brightness'] > 140):
-        print("DEBUG - Detected: Bright Spring")
+    # Hair color scoring
+    if hair['color'] == 'dark':
+        if 'black' in hair['specific_color']:
+            scores['cool_winter'] += 3
+            scores['neutral_winter'] += 2
+        elif 'brown' in hair['specific_color']:
+            if hair['warmth'] > 10:
+                scores['deep_autumn'] += 3
+                scores['warm_autumn'] += 2
+            else:
+                scores['cool_winter'] += 2
+                scores['neutral_winter'] += 2
+    elif hair['color'] == 'medium':
+        if 'auburn' in hair['specific_color'] or 'strawberry' in hair['specific_color']:
+            scores['warm_spring'] += 3
+            scores['bright_spring'] += 2
+        elif 'ash' in hair['specific_color']:
+            scores['cool_summer'] += 3
+            scores['neutral_summer'] += 2
+        else:
+            scores['warm_autumn'] += 2
+            scores['neutral_winter'] += 2
+    else:  # light hair
+        if 'golden' in hair['specific_color'] or 'honey' in hair['specific_color']:
+            scores['warm_spring'] += 3
+            scores['bright_spring'] += 2
+        elif 'platinum' in hair['specific_color'] or 'ash' in hair['specific_color']:
+            scores['cool_summer'] += 3
+            scores['neutral_summer'] += 2
+        else:
+            scores['bright_spring'] += 2
+            scores['cool_summer'] += 2
+    
+    # Eye color scoring
+    if eye['color'] == 'dark':
+        if 'brown' in eye['specific_color']:
+            if eye['warmth'] > 10:
+                scores['deep_autumn'] += 2
+                scores['warm_autumn'] += 2
+            else:
+                scores['cool_winter'] += 2
+                scores['neutral_winter'] += 2
+    elif eye['color'] == 'medium':
+        if 'hazel' in eye['specific_color']:
+            scores['warm_spring'] += 2
+            scores['warm_autumn'] += 2
+        elif 'amber' in eye['specific_color']:
+            scores['warm_spring'] += 3
+            scores['bright_spring'] += 2
+        else:
+            scores['neutral_winter'] += 2
+            scores['neutral_summer'] += 2
+    else:  # light eyes
+        if 'blue' in eye['specific_color']:
+            scores['cool_winter'] += 2
+            scores['cool_summer'] += 2
+        elif 'green' in eye['specific_color']:
+            scores['warm_spring'] += 2
+            scores['bright_spring'] += 2
+        else:
+            scores['cool_summer'] += 2
+            scores['neutral_summer'] += 2
+    
+    # Contrast scoring
+    if skin['contrast'] == 'high':
+        scores['cool_winter'] += 2
+        scores['bright_spring'] += 2
+        scores['deep_autumn'] += 2
+    elif skin['contrast'] == 'low':
+        scores['cool_summer'] += 2
+        scores['neutral_summer'] += 2
+    
+    # Find the highest scoring color type
+    best_match = max(scores, key=scores.get)
+    max_score = scores[best_match]
+    
+    print(f"DEBUG - Color Type Scores: {scores}")
+    print(f"DEBUG - Best Match: {best_match} (score: {max_score})")
+    
+    # If the best score is too low, use enhanced fallback
+    if max_score < 3:
+        print("DEBUG - Low confidence score, using enhanced fallback")
+        return enhanced_fallback_analysis(skin, hair, eye)
+    
+    return best_match
+
+def enhanced_fallback_analysis(skin, hair, eye):
+    """Enhanced fallback analysis when primary scoring is inconclusive"""
+    print("DEBUG - Using enhanced fallback analysis")
+    
+    # Check for very specific combinations
+    if (skin['brightness'] > 140 and skin['warmth'] > 15 and 
+        hair['color'] == 'light' and 'golden' in hair['specific_color']):
         return 'bright_spring'
-    elif (hair['color'] in ['light', 'medium'] and 
-          skin['warmth'] > 10 and skin['brightness'] > 120):
-        print("DEBUG - Detected: Warm Spring")
-        return 'warm_spring'
     
-    # Check for Summer characteristics (light features, cool undertones)
-    elif (hair['color'] == 'light' and eye['color'] == 'light' and 
-          skin['warmth'] < -10 and skin['brightness'] > 130):
-        print("DEBUG - Detected: Cool Summer")
-        return 'cool_summer'
-    elif (hair['color'] in ['light', 'medium'] and 
-          skin['warmth'] < 5 and skin['brightness'] > 110):
-        print("DEBUG - Detected: Neutral Summer")
-        return 'neutral_summer'
-    
-    # Check for Autumn characteristics (medium features, warm undertones)
-    elif (hair['color'] == 'medium' and eye['color'] == 'medium' and 
-          skin['warmth'] > 10 and skin['brightness'] < 120):
-        print("DEBUG - Detected: Warm Autumn")
-        return 'warm_autumn'
-    elif (hair['color'] == 'dark' and skin['warmth'] > 15 and 
-          skin['brightness'] < 100):
-        print("DEBUG - Detected: Deep Autumn")
+    if (skin['brightness'] < 90 and skin['warmth'] > 20 and 
+        hair['color'] == 'dark' and 'brown' in hair['specific_color']):
         return 'deep_autumn'
     
-    # Fallback logic based on skin characteristics
-    print("DEBUG - Using fallback logic")
-    if skin['brightness'] > 140:
+    if (skin['brightness'] > 130 and skin['warmth'] < -15 and 
+        hair['color'] == 'light' and 'platinum' in hair['specific_color']):
+        return 'cool_summer'
+    
+    if (skin['brightness'] < 100 and skin['warmth'] < -10 and 
+        hair['color'] == 'dark' and 'black' in hair['specific_color']):
+        return 'cool_winter'
+    
+    # Use weighted random based on skin characteristics
+    if skin['brightness'] > 130:
         if skin['warmth'] > 10:
-            print("DEBUG - Fallback: Bright Spring")
             return 'bright_spring'
         else:
-            print("DEBUG - Fallback: Cool Summer")
             return 'cool_summer'
     elif skin['brightness'] > 110:
-        if skin['warmth'] > 10:
-            print("DEBUG - Fallback: Warm Spring")
+        if skin['warmth'] > 8:
             return 'warm_spring'
         else:
-            print("DEBUG - Fallback: Neutral Summer")
             return 'neutral_summer'
-    elif skin['brightness'] > 80:
+    elif skin['brightness'] > 90:
         if skin['warmth'] > 10:
-            print("DEBUG - Fallback: Warm Autumn")
             return 'warm_autumn'
         else:
-            print("DEBUG - Fallback: Neutral Winter")
             return 'neutral_winter'
     else:
-        if skin['warmth'] > 10:
-            print("DEBUG - Fallback: Deep Autumn")
+        if skin['warmth'] > 15:
             return 'deep_autumn'
         else:
-            print("DEBUG - Fallback: Cool Winter")
             return 'cool_winter'
+
+def get_detailed_analysis_results(image_data):
+    """Get detailed analysis results for display"""
+    try:
+        # Decode and open the image
+        img = Image.open(io.BytesIO(base64.b64decode(image_data.split(',')[1])))
+        
+        # Convert to RGB if needed
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Get image dimensions
+        width, height = img.size
+        
+        # Define regions for analysis
+        face_x1, face_y1 = int(width * 0.25), int(height * 0.25)
+        face_x2, face_y2 = int(width * 0.75), int(height * 0.75)
+        face_region = img.crop((face_x1, face_y1, face_x2, face_y2))
+        
+        hair_x1, hair_y1 = int(width * 0.1), int(height * 0.05)
+        hair_x2, hair_y2 = int(width * 0.9), int(height * 0.35)
+        hair_region = img.crop((hair_x1, hair_y1, hair_x2, hair_y2))
+        
+        eye_x1, eye_y1 = int(width * 0.3), int(height * 0.3)
+        eye_x2, eye_y2 = int(width * 0.7), int(height * 0.5)
+        eye_region = img.crop((eye_x1, eye_y1, eye_x2, eye_y2))
+        
+        # Analyze each region
+        skin_analysis = analyze_skin_tone(face_region)
+        hair_analysis = analyze_hair_color(hair_region)
+        eye_analysis = analyze_eye_color(eye_region)
+        
+        return {
+            'skin': {
+                'brightness': round(skin_analysis['brightness'], 1),
+                'warmth': round(skin_analysis['warmth'], 1),
+                'contrast': skin_analysis['contrast'],
+                'undertone': 'warm' if skin_analysis['warmth'] > 5 else 'cool' if skin_analysis['warmth'] < -5 else 'neutral'
+            },
+            'hair': {
+                'color': hair_analysis['specific_color'].replace('_', ' ').title(),
+                'brightness': round(hair_analysis['brightness'], 1),
+                'warmth': round(hair_analysis['warmth'], 1),
+                'category': hair_analysis['color']
+            },
+            'eyes': {
+                'color': eye_analysis['specific_color'].replace('_', ' ').title(),
+                'brightness': round(eye_analysis['brightness'], 1),
+                'warmth': round(eye_analysis['warmth'], 1),
+                'category': eye_analysis['color']
+            }
+        }
+        
+    except Exception as e:
+        print(f"Error in detailed analysis: {e}")
+        return {
+            'skin': {'brightness': 0, 'warmth': 0, 'contrast': 'unknown', 'undertone': 'unknown'},
+            'hair': {'color': 'Unknown', 'brightness': 0, 'warmth': 0, 'category': 'unknown'},
+            'eyes': {'color': 'Unknown', 'brightness': 0, 'warmth': 0, 'category': 'unknown'}
+        }
 
 def generate_face_analysis(color_type):
     """Generate personalized face analysis based on color type"""
@@ -491,10 +721,14 @@ def analyze():
         color_info = COLOR_TYPES[color_type]
         face_analysis = generate_face_analysis(color_type)
         
+        # Get detailed analysis results for display
+        detailed_analysis = get_detailed_analysis_results(image_data)
+        
         # Generate recommendations
         recommendations = {
             'color_type': color_info,
             'face_analysis': face_analysis,
+            'detailed_analysis': detailed_analysis,
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
         
