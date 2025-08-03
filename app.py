@@ -721,14 +721,10 @@ def analyze():
         color_info = COLOR_TYPES[color_type]
         face_analysis = generate_face_analysis(color_type)
         
-        # Get detailed analysis results for display
-        detailed_analysis = get_detailed_analysis_results(image_data)
-        
         # Generate recommendations
         recommendations = {
-            'color_type': color_info,
+            'best_colors_for_you': color_info,
             'face_analysis': face_analysis,
-            'detailed_analysis': detailed_analysis,
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
         
@@ -743,3 +739,4 @@ def uploaded_file(filename):
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000) 
+    
