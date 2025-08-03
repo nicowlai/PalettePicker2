@@ -155,8 +155,8 @@ function displayResults(data) {
     resultsSection.style.display = 'block';
     
     // Update color type
-    colorTypeName.textContent = data.color_type.name;
-    colorDescription.textContent = data.color_type.description;
+    colorTypeName.textContent = data.best_colors_for_you.name;
+    colorDescription.textContent = data.best_colors_for_you.description;
     
     // Update face analysis
     complexion.textContent = data.face_analysis.complexion;
@@ -187,9 +187,9 @@ function displayResults(data) {
     }
     
     // Update recommendations
-    updateColorTags(clothingColors, data.color_type.clothing);
-    updateColorTags(makeupColors, data.color_type.makeup);
-    updateColorTags(avoidColors, data.color_type.avoid);
+    updateColorTags(clothingColors, data.best_colors_for_you.clothing);
+    updateColorTags(makeupColors, data.best_colors_for_you.makeup);
+    updateColorTags(avoidColors, data.best_colors_for_you.avoid);
     
     // Add celebration animation
     resultsSection.style.animation = 'fadeIn 0.8s ease-out';
